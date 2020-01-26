@@ -1,0 +1,76 @@
+///////////////GIT- GITHUB /////////////////////////////////////////////////
+//    Requisito: Git Bash                                                 //
+//    DOCUMENTACION: git --help                                           //
+//    DOCUMENTACION2: https://git-scm.com/book/en/v1                      //
+////////////////////////////////////////////////////////////////////////////
+
+//////////////////////COMENZAR/////////////////////////////////////////////
+ - Iniciar o resetear:
+    $ git init
+
+ - Identificarse:
+    $ git config --global user.name "John Doe"
+    $ git config --global user.email johndoe@example.com
+
+/---------------VER ESTADOS y CONFIGURACIONES------------------------------
+ - ver configuracion de GIT:
+    $ git config --list
+
+ - ver area de trabajo y area preparado:
+    $ git status
+        rojo  - archivo modificado desde la ultima version en area de trabajo.
+        verde - archivo   agregado al area de preparacion.
+
+ - mostrar meta datos de los commited.
+  $ git log
+  $ git log -g // mostrar commit de todos los branch con toda la informacion.
+  $ git log --oneline --decorate --all --graph // enlistar todos los commit y branch
+
+ - ver diferencias:
+   $ git diff <archivo>
+
+///////////////////MANEJAR VERSIONES///////////////////////////////////////////////////////////
+ - agregar Todos los archivos al area de trabajo:
+    $ git add -A
+
+- capturar version. convertir area de trabajo a repositorio git.
+   $ git commit –m 'versión inicial del proyecto'
+                   El mesaje del commit debe decir el que? y porque? bien descriptivo.
+
+  Cambiar de Branch:
+- volver a versiones anteriores, modifica automaticamente, borra cambios.
+   $ git checkout --<archivo>    // volver archivo 1 commit.
+   $ git checkout tokenDelCommit // volver todos los archivos a un commit especifico
+   $ git reset --hard HEAD~2     // volver todos los archivos 2 commit atras.
+
+ - volver a versiones anteriores, mantiene los archivos como estan, se pueden modificar manualmente, pero se pierde los commit intermedios.
+   $ git reset HEAD~2 // volver 2 commit.
+
+///////////////////MANEJAR RAMIFICACIONES BRANCH //////////////////////////////////////////////
+Master: Nombre de Rama Principal.
+head: indica la rama actual.
+
+git branch // mostrar ramas, listar ramas
+git branch <Nombre rama>  // crear ramas
+$ git checkout <nombrerama>  // cambiar rama.
+$ git checkout -b <nueva_rama>  / crear nueva rama y cambiarse de una version
+$ git branch -m <antiguoRama> <nuevoNombreRama>  // Cambiar nombre a ramas
+$ git branch -d <nombreRama> // eliminar rama
+
+'detached HEAD o cabeza separada':
+   - Si se esta es este estado se pueden hacer commited y luego desecharlos simplemente cambiando a la rama master.
+   - Para confirmar el detached HEAD y crearle una rama se utiliza el comando '$ git checkout -b <nueva_rama>'
+
+FUCIONAR RAMAS:
+  Crear un commit con los commit fucionados de 2 ramas.
+  1. ir a la rama de destino "master" git checkout <Master>
+  2.  git marge <ramaDeOrigen>
+  3. me muestra los conflictos primero, hay que resolverlos.
+///////////////////////GITHUB/////////////////////////////////////////////////////////////////////
+   DOCUMENTACION: https://help.github.com/en/github/using-git/which-remote-url-should-i-use#cloning-with-https-urls-recommended
+   
+  - Enlazar el reposiorio de github con el git local.
+  $ git remote add origin https://github.com/user/Ejemplo.git  (Ver link en el repositorio github "Clone with HTTPS")
+
+  - subir los Cambios local al servidor
+  $ git push -u origin master

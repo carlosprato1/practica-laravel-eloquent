@@ -1,0 +1,250 @@
+
+  +------------------- Rimorsoft Online - ELOQUEN ORM Relationships -------------------------------+
+  +                                                                                                +
+  +      Requerimientos:                                                                           +
+  +          * LARAGON actual 4.0.4                                                                +
+  +              - PHP actual 7.2.11                                                               +
+  +              - MySQL actual 5.7.24                                                             +
+  +              - HeidiSQL                                                                        +
+  +              - laravel actual 5.7.25 Actualizado a 6.0                                         +
+  +          * Edito de Texto: Atom                                                                +
+  + DOCUMENTACION OFICIAL DE LARAVEL: https://laravel.com/docs/5.7 ; https://laravel.com/api/5.7/  +
+  +  Documentacion Eloqent: Relationships https://laravel.com/docs/6.x/eloquent-relationships      +
+  +                                                                                                +
+  +------------------------------------------------------------------------------------------------+
+  /////////////////////////////////INDICE/////////////////////////////////////////////////////////////
+          Nivel Intermedio - Proyecto Plantilla
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
+  NOTAS GENERALES:
+        -  Nunca modificar la migracion de manera directa, modificarla con otra migracion, e el caso de agregar un FK y constrains
+        -  restrinciones set null, cascade.
+        -  Al crear el recurso con php artisan make:model tratar de hacerlo por jerarquia de mayor a menor para evitar editar tablas en lo posible.
+
+  UNO - UNO
+
+     Directo:  $this->hasOne('other-table');    // definidir en el modelo principal
+     Directo opcion:  $this->hasOne('other-table', 'foreign_key', 'local_key'); // Definir parametros
+
+     Inverso:   $this->belongsTo('App\User');
+
+     Consulta relacionada:  $phone = User::find(1)->phone;
+
+  UNO - MUCHOS
+
+     Directo:   $this->hasMany('App\Comment');
+     Inverso:   $this->belongsTo('App\Post');
+
+     Consulta relacionada:
+
+                  -  $comments = App\Post::find(1)->comments;
+                     foreach ($comments as $comment) {  //  }  //acceder a todos
+
+                  - $comment = App\Post::find(1)->comments()->where('title', 'foo')->first(); //filtrar consulta, luego for
+
+  MUCHOS - MUCHOS
+     Inverso-Directo (se define igual): $this->belongsToMany('App\Role');
+     Opcion:  $this->belongsToMany('App\Role', 'role_user', 'user_id', 'role_id'); // definir parametros
+
+     Consulta relacionada:
+
+                  -  $user = App\User::find(1);
+                     foreach ($user->roles as $role) { //  }
+
+                  -  $roles = App\User::find(1)->roles()->orderBy('name')->get(); // filtrar consulta, for
+
+   Consultar a la tabla Intermedia:  // pivot
+                  - $user = App\User::find(1);
+                    foreach ($user->roles as $role) { echo $role->pivot->created_at; }
+
+                  - acceder a attributos extras en el pivot object.
+                    $this->belongsToMany('App\Role')->withPivot('column1', 'column2');
+
+   UNO - UNO NIVEL 2:
+       -   para traer informacion de una tabla que esta relacionada a travez de una intermedia
+       -   Teoria:   users(PK) -> perfil (FK_users) -> localition (FK_perfil)
+       -   relacionar a perfil con location
+
+                     public function location(){
+                         return $this->hasOne(Location::class);
+                       }
+       -   Luego, hacer desde users:
+
+                      public function location(){    //final           // intermedio
+                        return $this->hasOneThrough(Location::class, Profile::class);
+                      }
+
+    UNO - MUCHOS NIVEL 2
+      -   para traer informacion de una tabla que esta relacionada a travez de una intermedia
+      -   Teoria:  Country (PK) -> users(FK_country) -> posts(FK_users)
+      -   relacionar a user con posts.
+      -   luego, hacer desde country:
+                      public function posts() {         //final       // intermedio
+                          return $this->hasManyThrough(Post::class, User::class);
+                        }
+
+   RELACIONES POLIMORFICAS:
+        DEFINICION:
+          "Básicamente consiste en una relación donde aquella entidad con la que estás relacionando pueda ser variable.
+          Por ejemplo, un usuario puede dar "me gusta" a post de otro usuario, a un comentario de otro usuario, a un
+          vídeo, a un artículo en venta… en general, a un número de entidades indeterminado y variable. De ahí el polimorfismo."
+
+         POLIMORFICA UNO - UNO:
+              - Es una relacion UNO - UNO, Donde UNA de varias Entidades pueden definir su relacion con
+                UNA entidad secundaria. una por cada row.
+
+               Por Ejemplo:
+                   modelo Post(PK) y modelo users(PK) pueden tener imagenes guardadas en modelo Imagenes.
+                   por lo tanto cada Row de imagen Debe guardar:
+
+                     -  el FK_ID (imageable_id).
+                     -  el nombre del modelo (imageable_type).
+                                                         // Tabla singular + able
+                   Esto se hace solo definiendo "$table->morphs('imageable');" en la migracion final
+
+
+///////////////////////////////////////PRATICA/////////////////////////////////////////////////////////////////////////////////////////////////////////
+Curso de Eloquent ORM | Rimorsoft Online
+link: https://www.youtube.com/watch?v=uT-2pB43vXM&list=PLhCiuvlix-rT96yLQTTr3-eTZl6sbhVte&index=11
+ Actual: Video 11
+
+1. Instalar debug bar. Documentacion: https://packagist.org/packages/barryvdh/laravel-debugbar
+    - instalar con composer
+    - agregar serviceprovider y facecade en "config/app.php".
+    - crear "config/debugbar.php" con: "php artisan vendor:publish ---pro..."
+    - usage:   Debugbar::info($object);                            |  try {  throw new Exception('foobar');}
+               Debugbar::error('Error!');                          |  catch (Exception $e) { Debugbar::addThrowable($e); }
+               Debugbar::warning('Watch out…');                    |
+               Debugbar::addMessage('Another message', 'mylabel'); |
+
+               Debugbar::addCollector(new DebugBar\DataCollector\MessagesCollector('my_messages')); //colletor
+               debug($var1, $someString, $intValue, $object);
+
+2. Ver Diagram Entidad-Relacion con MySQL Workbech "Database/Reverse Engienner"
+
+4. Profiles-users:  Relacion UNO - UNO:
+    - Teoria: principal (PK) -> Pertenece a -> Secundaria (FK).
+
+    - crear recurso Profile "php artisan make:model Profile -mf" // crea model,factory y migracion.
+    - desde modelo user Acceder a la tabla Profile:
+
+                public function profile(){
+                  return $this->hasOne(Profile::class);
+                }
+
+    - MIGRACION: En Profile Secundaria definir FK y Restrincion.
+           foreing key:  $table -> bigInteger('user_id')->unsigned(); // FK - singular_id colocar el mismo tipo que el pk "bigInteger"
+
+           restrincion - cascada :  $table ->foreign('user_id')->references('id')   // fk  y PK
+                                           ->on('users')                            // tablaPlural
+                                           ->onDelete('cascade')
+                                           ->onUpdate('cascade');
+
+  5. Levels-users:  Relacion uno - muchos.
+     - Teoria:  principal UNO (PK) -> Tiene -> Secundaria MUCHOS (FK)
+                ENTONCES: Levels  (PK) -> tiene varios -> Usuarios (FK y Restrincion)
+     - En el Caso que el (FK y Restrincion) valla en una tabla ya Creada Modificarla con Otra migracion, Recordar
+       no sobreescribir porque daña el sistema.
+     - crear recurso Profile "php artisan make:model Profile -mf" // crea model,factory y migracion.
+     - MODIFICAR users "php artisan make:migration add_level_id_al_users"  agregarle:
+
+                       $table -> bigInteger('level_id')  // mismo tipo
+                                ->unsigned()             // no negativos
+                                ->nullable()            //permitir null
+                                ->after('id');
+
+                       $table ->foreign('level_id')->references('id')
+                                                  ->on('levels')
+                                                  ->onDelete('set null')
+                                                  ->onUpdate('cascade');
+
+    - depende de donde queremos accederlo. Se pueden las 2
+         acceer desde levels                          Acceder desde usuario
+            public function users(){                 |    public function level(){   // cuando apunto a uno singular cuando puedo traer varios plural
+               return $this->hasMany(User::class);   |       return $this->belongsTo(Level::class);
+            }                                        |    }
+
+  6. Group-users: Relacion MUCHOS - MUCHOS
+   - Teoria: principal (PK1) <-> intermedio (FK1, FK2) <-> principal (PK2)  //no importa direccion.
+
+   - crear recurso Group:    "php artisan make:model Profile -mf"
+   - Crear tabla intermedia: "php artisan make:migration create_group_user_table"  // Por orden alfabetico G y U
+   - Agregar a la tabla intermedia los 2 FK y las 2 Restrinciones:
+
+                         $table->bigInteger('group_id')->unsigned();
+                         $table->bigInteger('user_id')->unsigned();
+
+                         $table ->foreign('group_id')->references('id')
+                                                    ->on('groups')
+                                                    ->onDelete('cascade')
+                                                    ->onUpdate('cascade');
+                        $table ->foreign('user_id')->references('id')
+                                                   ->on('users')
+                                                   ->onDelete('cascade')
+                                                   ->onUpdate('cascade');
+  - agregar metodos:
+  acceer desde user                                 Acceder desde group
+     public function groups(){                     |    public function users(){   // exactamente no importa el nombe de la funcion
+        return $this->belongsToMany(Group::class); |       return $this->belongsToMany(User::class);
+     }                                             |    }
+
+  - OPcional: para poder llenar automaticamente las variables "timestamps()"
+    hacer: return $this->belongsToMany(Group::class)->withTimestamps(); // en los 2
+    y  dejar: "$table->timestamps();" en la tabla
+
+  8. users -> profile -> Location : Relacion UNO - UNO NIVEL 2
+    - AGREGAR: un Profile (PK) -> tiene -> un location(FK)
+
+       - crear recurso Group:    "php artisan make:model Location -mf"
+       - hacer FK y restrincion en cascada.
+       - relacionar a perfil con localition
+                           public function location(){
+                             return $this->hasOne(Location::class);
+                           }
+
+      - HACER la relacion A TRAVES DE NIVEL2:
+
+                     -   para traer informacion de una tabla que esta relacionada a travez de una intermedia
+                     -   Teoria:   users(PK) -> perfil (FK_users,PK) -> localition (FK_perfil)
+                     -   hacer desde users:
+                                        public function location(){    //info              // traves
+                                          return $this->hasOneThrough(Location::class, Profile::class);
+                                        }
+
+  9. - crear recurso Category:    "php artisan make:model Category -mf"
+
+     - crear recurso Post:    "php artisan make:model Post -mf"
+             //  users(PK)   -> creado    ->  Post(FK_user y restrincion  cascade)      UNO-UNO
+             // category(PK) -> pertenece ->  Post(FK_category y restrincion cascade)   UNO-UNO
+
+
+     - crear recurso Video:    "php artisan make:model Video -mf"
+             //  users(PK)   -> creado    ->  Post(FK_user y restrincion  cascade)      UNO-UNO
+             // category(PK) -> pertenece ->  Post(FK_category y restrincion cascade)   UNO-UNO
+
+
+     - crear recurso Comments:
+          -   tiene una relacion bien definida con users(PK) -> creado -> comment(FK_user y restrincion cascade)
+          -   Relacion POLIMORFICA UNO - MUCHOS: Commentable(FK y Tipo) -> Puede pertenece   a-> Video(PK) (puede tener muchos comentarios)
+                                                                                          ó  a -> Post(PK) (puede tener muchos comentarios)
+                  $table->morphs("commentable")  // tablaSingular+able
+
+     - crear recurso Image:    "php artisan make:model Image -mf"
+          - Relacion POLIMORFICA UNO - UNO: imageable(FK y Tipo) -> Puede Pertenecer a un -> Video(PK)  (puede tener solo una imagen)
+          -   $table->morphs("commentable")  // tablaSingular+able                ó  a un -> Post(PK)   (puede tener solo una imagen)
+                                                                                  ó  a un -> Perfil(PK) (puede tener solo una imagen)
+
+     - crear recurso Tag:    "php artisan make:model Tag -mf"
+        - RELACION POLIMORFICA MUCHO - MUCHOS:
+                Tag(PK) -> Taggable "intermedia" (Taggable(FK y Tipo)) -> puede pertenecer a -> Post(PK)
+                                                                                        ó  a -> Videos(PK)
+
+
+     - crear solo migracion (tabla Taggables):    "php artisan make:migration create_taggables_table
+          - Tabla intermedia Para  RELACION POLIMORFICA MUCHOS - MUCHOS.
+
+                           $table->morphs("Taggables")  quienes la usaran?
+
+
+   7. traer tabla con "User::get();" y con este traer info de todas las tablas inclusive de location (nivel-2)
